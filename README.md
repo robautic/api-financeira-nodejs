@@ -1,53 +1,53 @@
 # Transactions API
 
-REST API for personal financial transaction management, built with a modern Node.js stack.
+API REST para controle de transações financeiras pessoais, construída com uma stack moderna de Node.js.
 
-## Tech Stack
+## Tecnologias
 
-| Tool | Purpose |
-|------|---------|
+| Ferramenta | Finalidade |
+|------------|-----------|
 | Node.js v20+ | Runtime |
-| TypeScript | Static typing |
-| Fastify | HTTP framework |
-| Knex.js | SQL query builder |
-| Zod | Schema validation |
-| SQLite | Development database |
-| PostgreSQL | Production database |
-| Vitest + Supertest | Automated testing |
+| TypeScript | Tipagem estática |
+| Fastify | Framework HTTP |
+| Knex.js | Query builder SQL |
+| Zod | Validação de schemas |
+| SQLite | Banco de dados em desenvolvimento |
+| PostgreSQL | Banco de dados em produção |
+| Vitest + Supertest | Testes automatizados |
 
-## Features
+## Funcionalidades
 
-Session management is handled automatically via cookies (`sessionId`). A unique identifier is generated on the first transaction and persisted across requests.
+O controle de sessão é feito automaticamente via cookies (`sessionId`). Um identificador único é gerado na primeira transação e persistido nas requisições seguintes.
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| `POST` | `/transactions` | Create a new transaction |
-| `GET` | `/transactions` | List all transactions for the current session |
-| `GET` | `/transactions/:id` | Get a single transaction by ID |
-| `GET` | `/transactions/summary` | Get consolidated balance (credits minus debits) |
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `POST` | `/transactions` | Cria uma nova transação |
+| `GET` | `/transactions` | Lista todas as transações da sessão atual |
+| `GET` | `/transactions/:id` | Retorna uma transação pelo ID |
+| `GET` | `/transactions/summary` | Retorna o saldo consolidado (créditos menos débitos) |
 
-**Transaction body:**
+**Corpo da requisição (POST):**
 ```json
 {
-  "title": "Freelance payment",
+  "title": "Pagamento freelance",
   "amount": 3000,
   "type": "credit"
 }
 ```
 
-## Getting Started
+## Como executar
 
-**Prerequisites:** Node.js >= 20.0.0
+**Pré-requisito:** Node.js >= 20.0.0
 
-### 1. Install dependencies
+### 1. Instale as dependências
 
 ```bash
 npm install
 ```
 
-### 2. Configure environment variables
+### 2. Configure as variáveis de ambiente
 
-Create a `.env` file at the project root:
+Crie um arquivo `.env` na raiz do projeto:
 
 ```env
 NODE_ENV=development
@@ -55,7 +55,7 @@ DATABASE_CLIENT=sqlite
 DATABASE_URL="./db/app.db"
 ```
 
-For tests, create a `.env.test` file:
+Para testes, crie um arquivo `.env.test`:
 
 ```env
 NODE_ENV=test
@@ -63,35 +63,35 @@ DATABASE_CLIENT=sqlite
 DATABASE_URL="./db/test.db"
 ```
 
-### 3. Run database migrations
+### 3. Execute as migrations
 
 ```bash
 npm run knex -- migrate:latest
 ```
 
-### 4. Start the development server
+### 4. Inicie o servidor
 
 ```bash
 npm run dev
 ```
 
-## Running Tests
+## Testes
 
 ```bash
 npm run test
 ```
 
-Tests use an isolated database defined in `.env.test` and are executed with Vitest + Supertest.
+Os testes utilizam um banco de dados isolado definido no `.env.test` e são executados com Vitest + Supertest.
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server with hot reload via `tsx` |
-| `npm run build` | Compile TypeScript to production via `tsup` |
-| `npm run knex` | Run Knex CLI commands via `tsx` |
-| `npm run lint` | Lint and fix code style with ESLint |
+| Comando | Descrição |
+|---------|-----------|
+| `npm run dev` | Inicia o servidor em modo desenvolvimento com hot reload via `tsx` |
+| `npm run build` | Compila o TypeScript para produção via `tsup` |
+| `npm run knex` | Executa comandos do Knex CLI via `tsx` |
+| `npm run lint` | Verifica e corrige o estilo do código com ESLint |
 
-## License
+## Licença
 
 ISC
