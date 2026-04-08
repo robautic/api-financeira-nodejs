@@ -217,23 +217,22 @@ export async function transactionsRoutes(app: FastifyInstance) {
         if (apiKey === process.env.FINTRACK_API_KEY) {
           console.log('[preHandler] API Key valida, buscando usuario...')
           try {
+            // 🔧 CORREÇÃO: buscar pelo email fixo em vez do ID
             const userRef = await knex('users')
-              .where({
-                id:
-                  process.env.N8N_USER_ID ||
-                  '31b1156d-b639-4810-90c5-2e2aaf6cec0a',
-              })
+              .where({ email: 'valeskatkg@gmail.com' })
               .first()
+
             if (!userRef) {
-              console.error('[preHandler] Usuario nao encontrado para ID')
+              console.error(
+                '[preHandler] Usuario nao encontrado para o email valeskatkg@gmail.com',
+              )
               return reply
                 .status(500)
                 .send({ error: 'No user found for automation' })
             }
             console.log('[preHandler] Usuario encontrado:', userRef.id)
-            ;(request as typeof request & { user: { id: string } }).user = {
-              id: userRef.id,
-            }
+            // Atribui o usuário à requisição
+            ;(request as { user: { id: string } }).user = { id: userRef.id }
             return
           } catch (err) {
             console.error('[preHandler] Erro ao buscar usuario:', err)
