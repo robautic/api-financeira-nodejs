@@ -1,9 +1,40 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import bcrypt from 'bcryptjs'
+import { knex } from '../database'
 import { registerUser, loginUser } from '../services/auth.service'
 import { verifyRefreshToken, generateTokens } from '../lib/jwt'
 
 export async function authRoutes(app: FastifyInstance) {
+  // Rota de reset de senha (protegida por segredo)
+  app.post('/reset-password', async (request, reply) => {
+    const schema = z.object({
+      secret: z.string(),
+      email: z.string().email(),
+      newPassword: z.string().min(6),
+    })
+
+    try {
+      const { secret, email, newPassword } = schema.parse(request.body)
+
+      if (secret !== process.env.RESET_SECRET) {
+        return reply.status(403).send({ error: 'Forbidden' })
+      }
+
+      const passwordHash = await bcrypt.hash(newPassword, 10)
+      await knex('users')
+        .where({ email })
+        .update({ password_hash: passwordHash })
+
+      return { success: true }
+    } catch (err) {
+      return reply.status(500).send({
+        error: 'Internal server error',
+        message: err instanceof Error ? err.message : 'Unknown error',
+      })
+    }
+  })
+
   app.post('/register', async (request, reply) => {
     const schema = z.object({
       name: z.string().min(2),
@@ -18,20 +49,12 @@ export async function authRoutes(app: FastifyInstance) {
       const user = await registerUser(name, email, password)
       return reply.status(201).send({ user })
     } catch (err) {
-      console.error('[POST /register] ERRO CAPTURADO:')
-      console.error(err)
-
-      if (err instanceof Error) {
-        console.error('[POST /register] Tipo do erro:', err.constructor.name)
-        console.error('[POST /register] Mensagem:', err.message)
-        console.error('[POST /register] Stack:', err.stack)
-      }
+      console.error('[POST /register] ERRO CAPTURADO:', err)
 
       if (err instanceof z.ZodError) {
-        return reply.status(400).send({
-          error: 'Validation error',
-          details: err.issues,
-        })
+        return reply
+          .status(400)
+          .send({ error: 'Validation error', details: err.issues })
       }
 
       if (err instanceof Error && err.message === 'EMAIL_TAKEN') {
