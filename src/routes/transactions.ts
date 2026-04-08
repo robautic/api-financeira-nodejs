@@ -69,13 +69,11 @@ export async function transactionsRoutes(app: FastifyInstance) {
         if (month && year) {
           const client = knex.client.config.client
           if (client === 'pg') {
-            // PostgreSQL
             baseQuery = baseQuery.whereRaw(
               'EXTRACT(MONTH FROM created_at) = ? AND EXTRACT(YEAR FROM created_at) = ?',
               [month, year],
             )
           } else {
-            // SQLite (desenvolvimento)
             baseQuery = baseQuery.whereRaw(
               "strftime('%m', created_at) = ? AND strftime('%Y', created_at) = ?",
               [month.padStart(2, '0'), year],
@@ -121,7 +119,7 @@ export async function transactionsRoutes(app: FastifyInstance) {
           .orderBy('date', 'asc')) as unknown as EvolutionResult[]
 
         const totalIncome = Number(stats?.totalIncome || 0)
-        const totalExpenses = Number(stats?.totalExpenses || 0) // já é negativo
+        const totalExpenses = Number(stats?.totalExpenses || 0)
         const currentBalance = totalIncome + totalExpenses
 
         return {
@@ -217,7 +215,6 @@ export async function transactionsRoutes(app: FastifyInstance) {
         if (apiKey === process.env.FINTRACK_API_KEY) {
           console.log('[preHandler] API Key valida, buscando usuario...')
           try {
-            // 🔧 CORREÇÃO: buscar pelo email fixo em vez do ID
             const userRef = await knex('users')
               .where({ email: 'valeskatkg@gmail.com' })
               .first()
@@ -231,8 +228,9 @@ export async function transactionsRoutes(app: FastifyInstance) {
                 .send({ error: 'No user found for automation' })
             }
             console.log('[preHandler] Usuario encontrado:', userRef.id)
-            // Atribui o usuário à requisição
-            ;(request as { user: { id: string } }).user = { id: userRef.id }
+            ;(request as typeof request & { user: { id: string } }).user = {
+              id: userRef.id,
+            }
             return
           } catch (err) {
             console.error('[preHandler] Erro ao buscar usuario:', err)
@@ -289,6 +287,9 @@ export async function transactionsRoutes(app: FastifyInstance) {
           newTransaction.id,
         )
 
+        console.log(
+          `[POST /transactions] Chamando processCategorizationBackground para ${newTransaction.id} com título "${title}"`,
+        )
         processCategorizationBackground(newTransaction.id, title)
 
         fetch('http://localhost:5678/webhook-test/nova-transacao', {

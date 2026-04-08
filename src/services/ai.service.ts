@@ -4,12 +4,19 @@ import { knex } from '../database'
 export async function categorizeTransaction(
   description: string,
 ): Promise<string> {
-  const completion = await groqClient.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
-    messages: [
-      {
-        role: 'system',
-        content: `Você é um assistente de categorização financeira especialista em gastos brasileiros.
+  console.log('[AI] Chamando Groq com descrição:', description)
+  if (!process.env.GROQ_API_KEY) {
+    console.error('[AI] GROQ_API_KEY não está definida!')
+    return 'Outros'
+  }
+
+  try {
+    const completion = await groqClient.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um assistente de categorização financeira especialista em gastos brasileiros.
 Classifique a transação em APENAS UMA destas categorias:
 Alimentação, Transporte, Moradia, Lazer, Saúde, Educação, Serviços, Outros.
 
@@ -23,33 +30,47 @@ REGRAS OBRIGATÓRIAS DE MAPEAMENTO:
 - Se contiver 'Salão', 'Barbearia', 'Manicure', 'Assinatura', 'Streaming', 'Software', 'App' -> RESPOSTA: Serviços
 
 Responda APENAS o nome da categoria escolhida. Sem pontos, sem aspas, sem explicações adicionais.`,
-      },
-      {
-        role: 'user',
-        content: description,
-      },
-    ],
-    temperature: 0,
-  })
+        },
+        {
+          role: 'user',
+          content: description,
+        },
+      ],
+      temperature: 0,
+    })
 
-  const rawCategory =
-    completion.choices[0]?.message?.content?.trim().replace(/[".]/g, '') ||
-    'Outros'
+    const rawCategory =
+      completion.choices[0]?.message?.content?.trim().replace(/[".]/g, '') ||
+      'Outros'
 
-  return (
-    rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase()
-  )
+    const finalCategory =
+      rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase()
+    console.log('[AI] Categoria retornada pela IA:', finalCategory)
+    return finalCategory
+  } catch (error) {
+    console.error('[AI] Erro na chamada à Groq:', error)
+    return 'Outros'
+  }
 }
 
 export async function processCategorizationBackground(
   transactionId: string,
   description: string,
 ) {
+  console.log(
+    `[AI] Iniciando categorização para ${transactionId} com descrição: "${description}"`,
+  )
   try {
     const category = await categorizeTransaction(description)
     await knex('transactions').where({ id: transactionId }).update({ category })
-    console.log(`[AI] Transaction ${transactionId} categorized as: ${category}`)
+    console.log(
+      `[AI] Transaction ${transactionId} atualizada para: ${category}`,
+    )
   } catch (error) {
-    console.log(`[AI] Error categorizing transaction ${transactionId}:`, error)
+    console.error(`[AI] ERRO ao categorizar transação ${transactionId}:`, error)
+    if (error instanceof Error) {
+      console.error('[AI] Mensagem:', error.message)
+      console.error('[AI] Stack:', error.stack)
+    }
   }
 }
