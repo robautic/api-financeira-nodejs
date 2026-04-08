@@ -2,7 +2,6 @@
 
 Sistema de controle financeiro pessoal que automatiza a captura de gastos via e-mail (Nubank e 99Pay), categoriza as transações com IA (Groq/Llama 3) e exibe tudo em um dashboard moderno.
 
-![Dashboard](public/screenshot.png)
 
 ## Deploy
 
