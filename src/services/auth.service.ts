@@ -40,7 +40,6 @@ export async function registerUser(
       console.error('[registerUser] Stack:', error.stack)
     }
 
-    // Log específico para erros do Knex/PostgreSQL
     if (typeof error === 'object' && error !== null) {
       interface DatabaseError {
         code?: string
@@ -62,17 +61,34 @@ export async function registerUser(
 }
 
 export async function loginUser(email: string, password: string) {
-  const user = await knex('users').where({ email }).first()
+  try {
+    console.log('[loginUser] Tentativa de login:', email)
 
-  if (!user) {
-    throw new Error('INVALID_CREDENTIALS')
+    const user = await knex('users').where({ email }).first()
+    if (!user) {
+      console.warn('[loginUser] Usuário não encontrado:', email)
+      throw new Error('INVALID_CREDENTIALS')
+    }
+    console.log('[loginUser] Usuário encontrado, verificando senha...')
+
+    const passwordMatch = await bcrypt.compare(password, user.password_hash)
+    if (!passwordMatch) {
+      console.warn('[loginUser] Senha incorreta para:', email)
+      throw new Error('INVALID_CREDENTIALS')
+    }
+    console.log('[loginUser] Senha correta, gerando tokens...')
+
+    const tokens = generateTokens(user.id)
+    console.log('[loginUser] Login bem-sucedido:', email)
+    return tokens
+  } catch (error) {
+    console.error('[loginUser] ERRO CRÍTICO:')
+    console.error(error)
+
+    if (error instanceof Error) {
+      console.error('[loginUser] Mensagem:', error.message)
+    }
+
+    throw error
   }
-
-  const passwordMatch = await bcrypt.compare(password, user.password_hash)
-
-  if (!passwordMatch) {
-    throw new Error('INVALID_CREDENTIALS')
-  }
-
-  return generateTokens(user.id)
 }
