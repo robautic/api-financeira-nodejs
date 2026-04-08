@@ -5,7 +5,7 @@ const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!
 
 export function generateTokens(userId: string) {
   const accessToken = jwt.sign({ sub: userId }, ACCESS_SECRET, {
-    expiresIn: '15m',
+    expiresIn: '7d',
   })
 
   const refreshToken = jwt.sign({ sub: userId }, REFRESH_SECRET, {

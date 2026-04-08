@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* O coração do visual Bento Box */
+.bento-card {
+  border-radius: 2rem;
+  transition: box-shadow 0.3s ease;
+}
+
+/* Scrollbar invisível e elegante para o Feed */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0; /* slate-200 */
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1; /* slate-300 */
+}
+
+/* Estilização dos Botões de Filtro via JS */
+.filter-btn {
+  background: transparent;
+  border: 1px solid #e2e8f0; /* slate-200 */
+  border-radius: 1rem;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b; /* slate-500 */
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.filter-btn:hover {
+  background: #f8fafc; /* slate-50 */
+}
+.filter-btn.active {
+  background: #0f172a; /* slate-900 */
+  border-color: #0f172a;
+  color: white;
+}
+
+/* Customização das caixas de seleção (Select) para remover a setinha nativa */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  /* Setinha cinza escuro para combinar com o tema claro */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.2em;
+}

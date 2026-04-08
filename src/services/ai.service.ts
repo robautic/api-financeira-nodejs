@@ -9,19 +9,36 @@ export async function categorizeTransaction(
     messages: [
       {
         role: 'system',
-        content: `You are a financial categorization assistant.
-        Classify the transaction into ONLY ONE of these categories:
-        Alimentação, Transporte, Moradia, Lazer, Saúde, Educação, Serviços, Outros.
-        Answer with EXACTLY ONE category name. No quotes, no periods, no explanations.`,
+        content: `Você é um assistente de categorização financeira especialista em gastos brasileiros.
+Classifique a transação em APENAS UMA destas categorias:
+Alimentação, Transporte, Moradia, Lazer, Saúde, Educação, Serviços, Outros.
+
+REGRAS OBRIGATÓRIAS DE MAPEAMENTO:
+- Se o texto contiver '99', 'Uber', 'Cabify', 'Indriver', 'Posto', 'Shell', 'Ipiranga', 'Estacionamento', 'Metrô', 'Trem', 'Ônibus' -> RESPOSTA: Transporte
+- Se contiver 'Ifood', 'McDonalds', 'Restaurante', 'Padaria', 'Zé Delivery', 'Mercado', 'Burger King', 'Supermercado', 'Carrefour', 'Assaí', 'Atacadão', 'Pão de Açúcar', 'Extra', 'Dia', 'Hortifruti', 'Açougue', 'Bebidas' -> RESPOSTA: Alimentação
+- Se contiver 'Netflix', 'Spotify', 'Cinema', 'Steam', 'PlayStation', 'Ingresso', 'Bar', 'Teatro', 'Show', 'Parque' -> RESPOSTA: Lazer
+- Se contiver 'Aluguel', 'Condominio', 'Luz', 'Agua', 'Internet', 'Vivo', 'Claro', 'Tim', 'Oi', 'Gás', 'IPTU' -> RESPOSTA: Moradia
+- Se contiver 'Farmácia', 'Hospital', 'Dentista', 'Unimed', 'Clínica', 'Exame', 'Consulta', 'Remédio' -> RESPOSTA: Saúde
+- Se contiver 'Escola', 'Faculdade', 'Curso', 'Livro', 'Material escolar' -> RESPOSTA: Educação
+- Se contiver 'Salão', 'Barbearia', 'Manicure', 'Assinatura', 'Streaming', 'Software', 'App' -> RESPOSTA: Serviços
+
+Responda APENAS o nome da categoria escolhida. Sem pontos, sem aspas, sem explicações adicionais.`,
       },
       {
         role: 'user',
         content: description,
       },
     ],
+    temperature: 0,
   })
 
-  return completion.choices[0]?.message?.content?.trim() ?? 'outros'
+  const rawCategory =
+    completion.choices[0]?.message?.content?.trim().replace(/[".]/g, '') ||
+    'Outros'
+
+  return (
+    rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase()
+  )
 }
 
 export async function processCategorizationBackground(
