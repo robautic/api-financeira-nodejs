@@ -7,3 +7,5 @@ dist
 *.d.ts.map
 db/migrations/*.js
 db/migrations/*.d.ts
+teste/
+set-balance.js
