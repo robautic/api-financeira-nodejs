@@ -10,18 +10,44 @@ export async function authRoutes(app: FastifyInstance) {
       email: z.string().email(),
       password: z.string().min(6),
     })
-    const { name, email, password } = schema.parse(request.body)
 
     try {
+      const { name, email, password } = schema.parse(request.body)
+      console.log('[POST /register] Dados validados:', { name, email })
+
       const user = await registerUser(name, email, password)
       return reply.status(201).send({ user })
     } catch (err) {
-      if (err === 'EMAIL_TAKEN') {
+      console.error('[POST /register] ERRO CAPTURADO:')
+      console.error(err)
+
+      if (err instanceof Error) {
+        console.error('[POST /register] Tipo do erro:', err.constructor.name)
+        console.error('[POST /register] Mensagem:', err.message)
+        console.error('[POST /register] Stack:', err.stack)
+      }
+
+      // Se for erro do Zod, retorna 400
+      if (err instanceof z.ZodError) {
+        return reply.status(400).send({
+          error: 'Validation error',
+          details: err.issues,
+        })
+      }
+
+      // Se for EMAIL_TAKEN
+      if (err instanceof Error && err.message === 'EMAIL_TAKEN') {
         return reply.status(409).send({ error: 'Email already registered' })
       }
-      throw err
+
+      // Erro genérico (500) com detalhes para debug
+      return reply.status(500).send({
+        error: 'Internal server error',
+        message: err instanceof Error ? err.message : 'Unknown error',
+      })
     }
   })
+
   app.post('/login', async (request, reply) => {
     const schema = z.object({
       email: z.string().email(),
@@ -58,7 +84,7 @@ export async function authRoutes(app: FastifyInstance) {
 
       reply.setCookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'produticion',
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         path: '/refresh',
         maxAge: 60 * 60 * 24 * 7,

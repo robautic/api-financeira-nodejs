@@ -8,24 +8,57 @@ export async function registerUser(
   email: string,
   password: string,
 ) {
-  const existing = await knex('users').where({ email }).first()
+  try {
+    console.log('[registerUser] Iniciando registro:', { name, email })
 
-  if (existing) {
-    throw new Error('EMAIL_TAKEN')
+    const existing = await knex('users').where({ email }).first()
+    if (existing) {
+      console.warn('[registerUser] Email já cadastrado:', email)
+      throw new Error('EMAIL_TAKEN')
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10)
+    console.log('[registerUser] Hash gerado com sucesso')
+
+    const [user] = await knex('users')
+      .insert({
+        id: randomUUID(),
+        name,
+        email,
+        password_hash: passwordHash,
+      })
+      .returning(['id', 'name', 'email'])
+
+    console.log('[registerUser] Usuário inserido no banco:', user.id)
+    return user
+  } catch (error) {
+    console.error('[registerUser] ERRO CRÍTICO:')
+    console.error(error)
+
+    if (error instanceof Error) {
+      console.error('[registerUser] Mensagem:', error.message)
+      console.error('[registerUser] Stack:', error.stack)
+    }
+
+    // Log específico para erros do Knex/PostgreSQL
+    if (typeof error === 'object' && error !== null) {
+      interface DatabaseError {
+        code?: string
+        detail?: string
+        table?: string
+        constraint?: string
+      }
+      const dbError = error as DatabaseError
+      console.error('[registerUser] Detalhes do erro:', {
+        code: dbError.code,
+        detail: dbError.detail,
+        table: dbError.table,
+        constraint: dbError.constraint,
+      })
+    }
+
+    throw error
   }
-
-  const passwordHash = await bcrypt.hash(password, 10)
-
-  const [user] = await knex('users')
-    .insert({
-      id: randomUUID(),
-      name,
-      email,
-      password_hash: passwordHash,
-    })
-    .returning(['id', 'name', 'email'])
-
-  return user
 }
 
 export async function loginUser(email: string, password: string) {
